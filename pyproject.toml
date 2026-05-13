@@ -1,0 +1,57 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "pipecat-deepfilternet-stream"
+version = "0.1.0"
+description = "Per-frame streaming DeepFilterNet3 (DFN3) for Pipecat — batch-quality denoising at ~50 ms total filter delay."
+readme = "README.md"
+license = { text = "Apache-2.0" }
+authors = [{ name = "Vahid Kowsari" }]
+keywords = ["pipecat", "deepfilternet", "noise-suppression", "denoise", "streaming", "audio", "voice"]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: Apache Software License",
+    "Operating System :: POSIX :: Linux",
+    "Operating System :: MacOS",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Topic :: Multimedia :: Sound/Audio :: Speech",
+    "Topic :: Scientific/Engineering :: Artificial Intelligence",
+]
+requires-python = ">=3.11"
+dependencies = [
+    # Core inference: Sonos' tract Python bindings (provides PulsedModel transform).
+    "tract>=0.21",
+    # libdf streaming STFT + ERB feature primitives. Comes via deepfilternet.
+    "deepfilternet>=0.5",
+    "deepfilterlib>=0.5",
+    "numpy>=1.24",
+    # Pipecat filter base class + SOXR resampler.
+    "pipecat-ai>=0.0.40",
+    "loguru>=0.7",
+]
+
+[project.optional-dependencies]
+test = [
+    "pytest>=7",
+    "soundfile>=0.12",
+    "soxr>=0.4",
+]
+
+[project.urls]
+Homepage = "https://github.com/vahidkowsari/pipecat-deepfilternet-stream"
+Repository = "https://github.com/vahidkowsari/pipecat-deepfilternet-stream"
+Issues = "https://github.com/vahidkowsari/pipecat-deepfilternet-stream/issues"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/pipecat_deepfilternet_stream"]
+
+[tool.hatch.build.targets.wheel.force-include]
+"src/pipecat_deepfilternet_stream/onnx_models/enc.onnx" = "pipecat_deepfilternet_stream/onnx_models/enc.onnx"
+"src/pipecat_deepfilternet_stream/onnx_models/erb_dec.onnx" = "pipecat_deepfilternet_stream/onnx_models/erb_dec.onnx"
+"src/pipecat_deepfilternet_stream/onnx_models/df_dec.onnx" = "pipecat_deepfilternet_stream/onnx_models/df_dec.onnx"
