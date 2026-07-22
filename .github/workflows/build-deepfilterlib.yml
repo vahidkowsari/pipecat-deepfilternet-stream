@@ -34,7 +34,7 @@ jobs:
           command: build
           manylinux: 2_28
           target: ${{ matrix.target }}
-          args: --release -m pyDF/Cargo.toml --interpreter 3.12 3.13 --out wheels
+          args: --release -m pyDF/Cargo.toml --interpreter python3.12 python3.13 --out wheels
 
       - uses: actions/upload-artifact@v4
         with:
