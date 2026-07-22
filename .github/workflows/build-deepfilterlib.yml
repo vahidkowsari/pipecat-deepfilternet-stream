@@ -1,0 +1,56 @@
+# Builds DeepFilterLib (Rust, from Rikorose/DeepFilterNet) wheels for Python
+# versions PyPI doesn't cover (cp312/cp313 linux), and attaches them to a
+# release of this repo so installs don't compile Rust from source.
+name: build-deepfilterlib-wheels
+
+on:
+  workflow_dispatch:
+    inputs:
+      dfn_tag:
+        description: "Rikorose/DeepFilterNet tag to build"
+        default: "v0.5.6"
+      release_tag:
+        description: "Release of this repo to attach wheels to"
+        default: "v0.1.0"
+
+jobs:
+  build:
+    strategy:
+      matrix:
+        include:
+          - runner: ubuntu-latest
+            target: x86_64
+          - runner: ubuntu-24.04-arm
+            target: aarch64
+    runs-on: ${{ matrix.runner }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          repository: Rikorose/DeepFilterNet
+          ref: ${{ inputs.dfn_tag }}
+
+      - uses: PyO3/maturin-action@v1
+        with:
+          command: build
+          manylinux: 2_28
+          target: ${{ matrix.target }}
+          args: --release -m pyDF/Cargo.toml --interpreter 3.12 3.13 --out wheels
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: wheels-${{ matrix.target }}
+          path: wheels/*.whl
+
+  attach:
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          merge-multiple: true
+          path: wheels
+      - run: gh release upload "${{ inputs.release_tag }}" wheels/*.whl --clobber --repo "${{ github.repository }}"
+        env:
+          GH_TOKEN: ${{ github.token }}
