@@ -1,6 +1,10 @@
 # Builds DeepFilterLib (Rust, from Rikorose/DeepFilterNet) wheels for Python
 # versions PyPI doesn't cover (cp312/cp313 linux), and attaches them to a
 # release of this repo so installs don't compile Rust from source.
+#
+# Uses `pip wheel` inside a manylinux container rather than maturin-action:
+# pyDF pins maturin>=0.11,<0.12 and current maturin crashes on its layout,
+# while pip honors the project's own build-system pin.
 name: build-deepfilterlib-wheels
 
 on:
@@ -16,12 +20,13 @@ on:
 jobs:
   build:
     strategy:
+      fail-fast: false
       matrix:
         include:
           - runner: ubuntu-latest
-            target: x86_64
+            arch: x86_64
           - runner: ubuntu-24.04-arm
-            target: aarch64
+            arch: aarch64
     runs-on: ${{ matrix.runner }}
     steps:
       - uses: actions/checkout@v4
@@ -29,16 +34,21 @@ jobs:
           repository: Rikorose/DeepFilterNet
           ref: ${{ inputs.dfn_tag }}
 
-      - uses: PyO3/maturin-action@v1
-        with:
-          command: build
-          manylinux: 2_28
-          target: ${{ matrix.target }}
-          args: --release -m pyDF/Cargo.toml --interpreter python3.12 python3.13 --out wheels
+      - name: Build wheels in manylinux_2_28 container
+        run: |
+          docker run --rm -v "$PWD":/io -w /io quay.io/pypa/manylinux_2_28_${{ matrix.arch }} bash -ec '
+            curl -sSf https://sh.rustup.rs | sh -s -- -y --profile minimal
+            source "$HOME/.cargo/env"
+            for py in cp312-cp312 cp313-cp313; do
+              /opt/python/$py/bin/pip wheel ./pyDF --no-deps -w raw
+            done
+            for whl in raw/*linux*.whl; do auditwheel repair "$whl" -w wheels; done
+            ls -l wheels
+          '
 
       - uses: actions/upload-artifact@v4
         with:
-          name: wheels-${{ matrix.target }}
+          name: wheels-${{ matrix.arch }}
           path: wheels/*.whl
 
   attach:
