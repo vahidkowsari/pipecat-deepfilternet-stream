@@ -23,10 +23,18 @@ The publicly-available DFN3 Python integrations (including the one in [pipecat-a
 ## Install
 
 ```bash
-pip install pipecat-deepfilternet-stream
+pip install pipecat-deepfilternet-stream \
+  --find-links https://github.com/vahidkowsari/pipecat-deepfilternet-stream/releases/expanded_assets/v0.1.0
 ```
 
-Wheels are available for Python 3.11–3.13 on Linux x86_64 and macOS (Intel + Apple Silicon). `tract` and `libdf` ship as pre-built wheels; no Rust toolchain required on the install side.
+The `--find-links` URL points at the [GitHub release](https://github.com/vahidkowsari/pipecat-deepfilternet-stream/releases/tag/v0.1.0), which hosts both this package's wheel and prebuilt `DeepFilterLib` manylinux wheels for Python 3.12/3.13 (PyPI only ships them up to 3.11 — without these, pip compiles the Rust extension from source, which needs a Rust toolchain and adds ~1–2 min to installs). On Python ≤3.11, PyPI's own DeepFilterLib wheels are used and no Rust toolchain is ever needed.
+
+With `uv`, the equivalent is:
+
+```bash
+uv pip install pipecat-deepfilternet-stream \
+  -f https://github.com/vahidkowsari/pipecat-deepfilternet-stream/releases/expanded_assets/v0.1.0
+```
 
 ## Usage
 
